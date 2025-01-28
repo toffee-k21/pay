@@ -4,6 +4,7 @@ const zod = require("zod");
 const { User } = require("../model/user");
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../config");
+const { Account } = require("../model/Account");
 
 const signupBody = zod.object({
   username: zod.string().email(),
@@ -18,12 +19,13 @@ const signinBody = zod.object({
 });
 
 router.post("/signup", async (req, res) => {
-  const { success } = signupBody.safeParse(req.body);
-  if (!success) {
-    return res.status(411).json({
-      message: "Incorrect inputs",
-    });
-  }
+  // const { success } = signupBody.safeParse(req.body);
+  // console.log(success)
+  // if (!success) {
+  //   return res.status(411).json({
+  //     message: "Incorrect inputs",
+  //   });
+  // }
 
   const existingUser = await User.findOne({
     username: req.body.username,
@@ -38,8 +40,8 @@ router.post("/signup", async (req, res) => {
   const user = await User.create({
     username: req.body.username,
     password: req.body.password,
-    firstName: req.body.firstName,
-    lastName: req.body.lastName,
+    firstname: req.body.firstname,
+    lastname: req.body.lastname,
   });
   const userId = user._id;
 
@@ -49,6 +51,11 @@ router.post("/signup", async (req, res) => {
     },
     JWT_SECRET
   );
+
+  await Account.create({
+    userId,
+    balance: 1 + Math.random() * 10000,
+  });
 
   res.json({
     message: "User created successfully",
